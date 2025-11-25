@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pomodoro Widget</title>
+
+<style>
+  :root {
+    --pink: #C14C8A;
+    --white: #FEFEFE;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pink);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--white);
+  }
+
+  .widget {
+    text-align: center;
+    width: 320px;
+  }
+
+  /* TOP TABS ----------------------------------------------------- */
+
+  .tabs {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .tab {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 2px solid var(--white);
+    background: transparent;
+    color: var(--white);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .tab.active {
+    background: rgba(254, 254, 254, 0.25);
+    border-color: transparent;
+  }
+
+  .tab:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
+  }
+
+  /* TIMER -------------------------------------------------------- */
+
+  .timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 800;
+    line-height: 0.9;
+  }
+
+  .time-part {
+    font-size: 80px;
+  }
+
+
+  /* CONTROLS ----------------------------------------------------- */
+
+  .controls-row {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .icon-button,
+  .primary-button {
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--white);
+    background: rgba(254, 254, 254, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-button {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+  }
+
+  .primary-button {
+    width: 110px;
+    height: 52px;
+    border-radius: 999px;
+    font-size: 20px;
+  }
+
+  .icon-button:focus-visible,
+  .primary-button:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
+  }
+
+  /* MORE MENU ---------------------------------------------------- */
+
+  .more-menu {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-120px);
+    background: rgba(0, 0, 0, 0.12);
+    padding: 8px;
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .more-menu button {
+    border: none;
+    background: rgba(254, 254, 254, 0.18);
+    color: var(--white);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  /* SETTINGS MODAL ---------------------------------------------- */
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 10;
+  }
+
+  .settings-modal {
+    background: #fefefe;
+    color: #7d2057; /* slightly darker text that matches pink tone */
+    border-radius: 16px;
+    padding: 20px 22px;
+    max-width: 360px;
+    width: 100%;
+  }
+
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .settings-title {
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .close-btn {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    cursor: pointer;
+    color: #7d2057;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 8px 0;
+    font-size: 14px;
+  }
+
+  .setting-row label {
+    margin-right: 12px;
+  }
+
+  .setting-row input[type="number"] {
+    width: 70px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    border: 1px solid #d7d7d7;
+    font-size: 14px;
+  }
+
+  .save-btn {
+    margin-top: 16px;
+    width: 100%;
+    border-radius: 999px;
+    border: none;
+    padding: 10px 0;
+    cursor: pointer;
+    background: #C14C8A;
+    color: #FEFEFE;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .save-btn:focus-visible {
+    outline: 2px solid #C14C8A;
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <!-- MODE TABS -->
+  <div class="tabs">
+    <button class="tab active" data-mode="focus">Focus</button>
+    <button class="tab" data-mode="short">Break</button>
+    <button class="tab" data-mode="long">Long B</button>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer">
+    <div id="minutes" class="time-part">25</div>
+
+   
+    <div id="seconds" class="time-part">00</div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-row">
+    <button class="icon-button" id="moreBtn" aria-label="More options">⋯</button>
+    <button class="primary-button" id="playPauseBtn" aria-label="Start timer">▶</button>
+    <button class="icon-button" id="nextBtn" aria-label="Next mode">⏭</button>
+  </div>
+
+  <!-- 3 DOTS POPUP -->
+  <div class="more-menu" id="moreMenu">
+    <button id="menuResetBtn">Reset</button>
+    <button id="menuSettingsBtn">Settings</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay">
+  <div class="settings-modal">
+    <div class="settings-header">
+      <div class="settings-title">Settings</div>
+      <button class="close-btn" id="closeSettingsBtn">✕</button>
+    </div>
+
+    <div class="setting-row">
+      <label for="focusInput">Focus length (min)</label>
+      <input type="number" id="focusInput" min="1" value="25">
+    </div>
+    <div class="setting-row">
+      <label for="shortInput">Short break (min)</label>
+      <input type="number" id="shortInput" min="1" value="5">
+    </div>
+    <div class="setting-row">
+      <label for="longInput">Long break (min)</label>
+      <input type="number" id="longInput" min="1" value="15">
+    </div>
+
+    <button class="save-btn" id="saveSettingsBtn">Save</button>
+  </div>
+</div>
+
+<script>
+  // --- STATE --------------------------------------------------------
+  const modes = {
+    focus: 25,
+    short: 5,
+    long: 15
+  };
+
+  let currentMode = "focus";
+  let totalSeconds = modes[currentMode] * 60;
+  let timerId = null;
+  let isRunning = false;
+
+  // --- ELEMENTS -----------------------------------------------------
+  const minutesEl = document.getElementById("minutes");
+  const secondsEl = document.getElementById("seconds");
+  const playPauseBtn = document.getElementById("playPauseBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const moreBtn = document.getElementById("moreBtn");
+  const moreMenu = document.getElementById("moreMenu");
+  const modeOrder = ["focus", "short", "long"];
+
+  const tabs = document.querySelectorAll(".tab");
+
+  const settingsOverlay = document.getElementById("settingsOverlay");
+  const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+  const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+  const focusInput = document.getElementById("focusInput");
+  const shortInput = document.getElementById("shortInput");
+  const longInput = document.getElementById("longInput");
+
+  const menuResetBtn = document.getElementById("menuResetBtn");
+  const menuSettingsBtn = document.getElementById("menuSettingsBtn");
+
+  // --- TIMER LOGIC --------------------------------------------------
+
+  function updateDisplay() {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+
+    minutesEl.textContent = String(m).padStart(2, "0");
+    secondsEl.textContent = String(s).padStart(2, "0");
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    totalSeconds = modes[mode] * 60;
+    clearInterval(timerId);
+    isRunning = false;
+    playPauseBtn.textContent = "▶";
+    updateDisplay();
+
+    tabs.forEach(tab => {
+      tab.classList.toggle("active", tab.dataset.mode === mode);
+    });
+  }
+
+  function startTimer() {
+    if (isRunning) return;
+    if (totalSeconds <= 0) totalSeconds = modes[currentMode] * 60;
+
+    isRunning = true;
+    playPauseBtn.textContent = "⏸";
+
+    timerId = setInterval(() => {
+      totalSeconds--;
+      updateDisplay();
+
+      if (totalSeconds <= 0) {
+        clearInterval(timerId);
+        isRunning = false;
+        playPauseBtn.textContent = "▶";
+        totalSeconds = 0;
+        updateDisplay();
+        // optional: add sound or auto-switch here
+      }
+    }, 1000);
+  }
+
+  function pauseTimer() {
+    clearInterval(timerId);
+    isRunning = false;
+    playPauseBtn.textContent = "▶";
+  }
+
+  function resetTimer() {
+    clearInterval(timerId);
+    isRunning = false;
+    totalSeconds = modes[currentMode] * 60;
+    playPauseBtn.textContent = "▶";
+    updateDisplay();
+  }
+
+  function goToNextMode() {
+  const currentIndex = modeOrder.indexOf(currentMode);
+  const nextIndex = (currentIndex + 1) % modeOrder.length;
+  setMode(modeOrder[nextIndex]);
+}
+
+  // --- SETTINGS ----------------------------------------------------
+
+  function openSettings() {
+    // fill inputs with current values
+    focusInput.value = modes.focus;
+    shortInput.value = modes.short;
+    longInput.value = modes.long;
+
+    settingsOverlay.style.display = "flex";
+  }
+
+  function closeSettings() {
+    settingsOverlay.style.display = "none";
+  }
+
+  function saveSettings() {
+    const f = parseInt(focusInput.value, 10);
+    const s = parseInt(shortInput.value, 10);
+    const l = parseInt(longInput.value, 10);
+
+    if (f > 0) modes.focus = f;
+    if (s > 0) modes.short = s;
+    if (l > 0) modes.long = l;
+
+    // if timer isn't running, update current mode length immediately
+    if (!isRunning) {
+      totalSeconds = modes[currentMode] * 60;
+      updateDisplay();
+    }
+
+    closeSettings();
+  }
+
+  // --- MENU & EVENTS -----------------------------------------------
+
+  playPauseBtn.addEventListener("click", () => {
+    if (isRunning) pauseTimer();
+    else startTimer();
+  });
+
+  document.getElementById("nextBtn").addEventListener("click", goToNextMode);
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      setMode(tab.dataset.mode);
+    });
+  });
+
+  moreBtn.addEventListener("click", () => {
+    const isVisible = moreMenu.style.display === "flex";
+    moreMenu.style.display = isVisible ? "none" : "flex";
+  });
+
+  // menu items
+  menuResetBtn.addEventListener("click", () => {
+    resetTimer();
+    moreMenu.style.display = "none";
+  });
+
+  menuSettingsBtn.addEventListener("click", () => {
+    moreMenu.style.display = "none";
+    openSettings();
+  });
+
+  // settings overlay events
+  closeSettingsBtn.addEventListener("click", closeSettings);
+  saveSettingsBtn.addEventListener("click", saveSettings);
+
+  settingsOverlay.addEventListener("click", (e) => {
+    if (e.target === settingsOverlay) closeSettings();
+  });
+
+  // initial draw
+  updateDisplay();
+</script>
+
+</body>
+</html>
