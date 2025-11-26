@@ -70,7 +70,7 @@
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 8px; /* 32px between dots and timer */
+    margin-bottom: 8px;
   }
 
   .cycle-dot {
@@ -88,7 +88,7 @@
 
   .timer {
     display: flex;
-    flex-direction: row;       /* horizontal layout */
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     font-weight: 800;
@@ -102,13 +102,13 @@
   /* add colon between minutes and seconds */
   #minutes::after {
     content: ":";
-    margin: 0 4px;            /* space between 25 and 00 */
+    margin: 0 4px;
   }
 
   /* CONTROLS ----------------------------------------------------- */
 
   .controls-row {
-    margin-top: 8px;          /* 32px between timer and buttons */
+    margin-top: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -146,16 +146,22 @@
     outline-offset: 2px;
   }
 
+  /* MORE MENU WRAPPER (for positioning on 3-dots) ---------------- */
+
+  .more-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
   /* MORE MENU ---------------------------------------------------- */
 
   .more-menu {
     position: absolute;
-    bottom: 120px;
+    bottom: calc(100% + 8px); /* open UP above the 3-dots button */
     left: 50%;
-    transform: translateX(-120px);
+    transform: translateX(-50%);
 
-    /* SOLID, NON-GLASS BACKGROUND */
-    background: #fefefe;          /* solid white */
+    background: #fefefe;
     border: 1px solid #e0e0e0;
     padding: 8px;
     border-radius: 12px;
@@ -163,14 +169,41 @@
     flex-direction: column;
     gap: 4px;
 
-    /* make sure the blur is completely gone */
     backdrop-filter: none;
+    min-width: 160px;
+    z-index: 5;
+  }
+
+  /* BRAND ROW INSIDE MENU ---------------------------------------- */
+
+  .menu-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    background: #f5f5f5;
+  }
+
+  .menu-brand img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: 8px;
+    opacity: 1; /* 100% opacity */
+  }
+
+  .menu-brand span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7d2057;
   }
 
   .more-menu button {
     border: none;
-    background: #f5f5f5;         /* solid grey button */
-    color: #7d2057;              /* matches your pink tone */
+    background: #f5f5f5;
+    color: #7d2057;
     padding: 6px 12px;
     border-radius: 999px;
     font-size: 14px;
@@ -193,7 +226,7 @@
 
   .settings-modal {
     background: #fefefe;
-    color: #7d2057; /* slightly darker text that matches pink tone */
+    color: #7d2057;
     border-radius: 16px;
     padding: 20px 22px;
     max-width: 360px;
@@ -234,7 +267,7 @@
 
   .setting-row input[type="number"],
   .setting-row input[type="checkbox"] {
-    /* keep default size for checkbox, small field for numbers */
+    /* keep default size */
   }
 
   .setting-row input[type="number"] {
@@ -285,15 +318,23 @@
 
   <!-- CONTROLS -->
   <div class="controls-row">
-    <button class="icon-button" id="moreBtn" aria-label="More options">⋯</button>
+    <!-- wrap 3-dots + menu so menu anchors to this button -->
+    <div class="more-wrapper">
+      <button class="icon-button" id="moreBtn" aria-label="More options">⋯</button>
+
+      <!-- 3 DOTS POPUP -->
+      <div class="more-menu" id="moreMenu">
+        <div class="menu-brand">
+          <img src="YOUR_LOGO_URL_HERE" alt="OrganizedQuinn logo">
+          <span>OrganizedQuinn</span>
+        </div>
+        <button id="menuResetBtn">Reset</button>
+        <button id="menuSettingsBtn">Settings</button>
+      </div>
+    </div>
+
     <button class="primary-button" id="playPauseBtn" aria-label="Start timer">▶</button>
     <button class="icon-button" id="nextBtn" aria-label="Next mode">⏭</button>
-  </div>
-
-  <!-- 3 DOTS POPUP -->
-  <div class="more-menu" id="moreMenu">
-    <button id="menuResetBtn">Reset</button>
-    <button id="menuSettingsBtn">Settings</button>
   </div>
 </div>
 
@@ -325,7 +366,7 @@
       <label for="cycleInput">Focus sessions before long</label>
       <input type="number" id="cycleInput" min="1" value="3">
     </div>
-    <!-- NEW: sound on/off -->
+    <!-- sound on/off -->
     <div class="setting-row">
       <label for="soundToggle">Sound</label>
       <input type="checkbox" id="soundToggle" checked>
@@ -732,4 +773,3 @@
 
 </body>
 </html>
-
