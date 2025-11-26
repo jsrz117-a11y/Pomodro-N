@@ -315,7 +315,7 @@
   let timerId = null;
   let isRunning = false;
 
-  // NEW: track short breaks → long break
+  // track short breaks → long break
   let shortBreakCounter = 0;
   let shortBreaksBeforeLong = 3;
 
@@ -327,10 +327,8 @@
   const minutesEl = document.getElementById("minutes");
   const secondsEl = document.getElementById("seconds");
   const playPauseBtn = document.getElementById("playPauseBtn");
-  const resetBtn = document.getElementById("resetBtn"); // (not used, but kept so nothing breaks)
   const moreBtn = document.getElementById("moreBtn");
   const moreMenu = document.getElementById("moreMenu");
-  const modeOrder = ["focus", "short", "long"];
 
   const tabs = document.querySelectorAll(".tab");
 
@@ -423,6 +421,29 @@
 
   // --- TIMER CORE (real-time based) ---------------------------------
 
+  // decides what to do when a session finishes
+  function handleSessionComplete() {
+    if (currentMode === "focus") {
+      // focus finished → count a short break
+      shortBreakCounter++;
+
+      if (shortBreakCounter >= shortBreaksBeforeLong) {
+        // go to long break and reset counter
+        shortBreakCounter = 0;
+        setMode("long");
+        startTimer(); // auto-start long break
+      } else {
+        // go to short break
+        setMode("short");
+        startTimer(); // auto-start short break
+      }
+    } else if (currentMode === "short" || currentMode === "long") {
+      // break finished → go to focus but DO NOT auto-start
+      setMode("focus");
+      // leave play button as ▶, user starts manually
+    }
+  }
+
   function resumeTimerFromEndTime() {
     clearInterval(timerId);
 
@@ -432,9 +453,9 @@
       const remaining = Math.round(diffMs / 1000);
 
       if (remaining <= 0) {
+        clearInterval(timerId);
         totalSeconds = 0;
         updateDisplay();
-        clearInterval(timerId);
         isRunning = false;
         endTimestamp = null;
         playPauseBtn.textContent = "▶";
@@ -447,7 +468,8 @@
           });
         }
 
-        saveState();
+        // move to next mode according to logic
+        handleSessionComplete();
         return;
       }
 
@@ -520,10 +542,9 @@
     saveState();
   }
 
-  // NEW: smarter next-mode logic using short break counter
+  // NEXT BUTTON: same logic as auto-advance, but NO auto-start
   function goToNextMode() {
     if (currentMode === "focus") {
-      // after a focus session → short or long break
       shortBreakCounter++;
       if (shortBreakCounter >= shortBreaksBeforeLong) {
         shortBreakCounter = 0;
@@ -532,7 +553,6 @@
         setMode("short");
       }
     } else {
-      // after any break → back to focus
       setMode("focus");
     }
   }
