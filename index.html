@@ -315,7 +315,7 @@
   let timerId = null;
   let isRunning = false;
 
-  // track short breaks → long break
+  // track completed short breaks → long break
   let shortBreakCounter = 0;
   let shortBreaksBeforeLong = 3;
 
@@ -424,23 +424,25 @@
   // decides what to do when a session finishes
   function handleSessionComplete() {
     if (currentMode === "focus") {
-      // focus finished → count a short break
-      shortBreakCounter++;
-
+      // focus finished → choose which break to take based on how many short breaks are done
       if (shortBreakCounter >= shortBreaksBeforeLong) {
-        // go to long break and reset counter
+        // we've already done enough short breaks → take a long break, reset counter
         shortBreakCounter = 0;
         setMode("long");
         startTimer(); // auto-start long break
       } else {
-        // go to short break
+        // still haven't reached the target → short break
         setMode("short");
         startTimer(); // auto-start short break
       }
-    } else if (currentMode === "short" || currentMode === "long") {
-      // break finished → go to focus but DO NOT auto-start
+    } else if (currentMode === "short") {
+      // short break finished → count it, then go to focus (do not auto-start)
+      shortBreakCounter++;
       setMode("focus");
-      // leave play button as ▶, user starts manually
+      // user must press play to start focus
+    } else if (currentMode === "long") {
+      // long break finished → back to focus, do not auto-start
+      setMode("focus");
     }
   }
 
@@ -470,6 +472,7 @@
 
         // move to next mode according to logic
         handleSessionComplete();
+        saveState();
         return;
       }
 
@@ -545,14 +548,19 @@
   // NEXT BUTTON: same logic as auto-advance, but NO auto-start
   function goToNextMode() {
     if (currentMode === "focus") {
-      shortBreakCounter++;
+      // manually skip a focus → go to the same break type logic, but don't start it
       if (shortBreakCounter >= shortBreaksBeforeLong) {
         shortBreakCounter = 0;
         setMode("long");
       } else {
         setMode("short");
       }
-    } else {
+    } else if (currentMode === "short") {
+      // manually skip a short break → count it as done, go to focus
+      shortBreakCounter++;
+      setMode("focus");
+    } else if (currentMode === "long") {
+      // manually skip long → back to focus
       setMode("focus");
     }
   }
