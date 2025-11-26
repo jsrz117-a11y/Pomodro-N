@@ -128,27 +128,30 @@
   bottom: 120px;
   left: 50%;
   transform: translateX(-120px);
-  background: #00000022;   /* soft solid background */
+
+  /* SOLID, NON-GLASS BACKGROUND */
+  background: #fefefe;          /* solid white */
+  border: 1px solid #e0e0e0;
   padding: 8px;
   border-radius: 12px;
   display: none;
   flex-direction: column;
   gap: 4px;
 
-  /* remove blur */
+  /* make sure the blur is completely gone */
   backdrop-filter: none;
 }
 
   .more-menu button {
-    border: none;
-    background: rgba(254, 254, 254, 0.18);
-    color: var(--white);
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 14px;
-    cursor: pointer;
-    text-align: left;
-  }
+  border: none;
+  background: #f5f5f5;         /* solid grey button */
+  color: #7d2057;              /* matches your pink tone */
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+}
 
   /* SETTINGS MODAL ---------------------------------------------- */
 
@@ -581,5 +584,6 @@
 
 </body>
 </html>
+
 
 
