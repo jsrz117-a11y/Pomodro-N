@@ -70,14 +70,14 @@
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 32px; /* 32px between dots and timer */
   }
 
   .cycle-dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: rgba(254, 254, 254, 0.2); /* 20% opacity */
+    background: rgba(254, 254, 254, 0.3); /* 30% opacity */
   }
 
   .cycle-dot.filled {
@@ -108,7 +108,7 @@
   /* CONTROLS ----------------------------------------------------- */
 
   .controls-row {
-    margin-top: 32px;
+    margin-top: 32px;          /* 32px between timer and buttons */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -315,7 +315,7 @@
       <label for="longInput">Long break (min)</label>
       <input type="number" id="longInput" min="1" value="15">
     </div>
-    <!-- NEW: how many focus sessions before long break -->
+    <!-- how many focus sessions before long break -->
     <div class="setting-row">
       <label for="cycleInput">Focus sessions before long</label>
       <input type="number" id="cycleInput" min="1" value="3">
@@ -380,12 +380,18 @@
   }
 
   // dots: render based on focusBeforeLong and completedFocusCount
+  // and show all filled while in long break
   function renderDots() {
     cycleDotsContainer.innerHTML = "";
     const count = Math.max(1, focusBeforeLong); // at least 1 dot
+    const filledCount =
+      currentMode === "long"
+        ? count                        // show all filled in long break
+        : Math.min(completedFocusCount, count);
+
     for (let i = 0; i < count; i++) {
       const dot = document.createElement("span");
-      dot.className = "cycle-dot" + (i < completedFocusCount ? " filled" : "");
+      dot.className = "cycle-dot" + (i < filledCount ? " filled" : "");
       cycleDotsContainer.appendChild(dot);
     }
   }
@@ -485,7 +491,6 @@
     } else if (currentMode === "short") {
       // short break finished → go back to focus, do not auto-start
       setMode("focus");
-      // user manually starts focus
     } else if (currentMode === "long") {
       // long break finished → go back to focus, do not auto-start
       setMode("focus");
@@ -543,6 +548,7 @@
       tab.classList.toggle("active", tab.dataset.mode === mode);
     });
 
+    renderDots();
     saveState();
   }
 
