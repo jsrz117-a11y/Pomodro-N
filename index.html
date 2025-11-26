@@ -146,41 +146,34 @@
     outline-offset: 2px;
   }
 
-  /* MORE MENU WRAPPER (for positioning on 3-dots) ---------------- */
+  /* MORE OVERLAY & MENU (centered like settings) ----------------- */
 
-  .more-wrapper {
-    position: relative;
-    display: inline-block;
+  .more-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: none;              /* shown when 3-dots clicked */
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
   }
 
-  /* MORE MENU ---------------------------------------------------- */
-
   .more-menu {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* center horizontally + vertically */
-
-  background: #fefefe;
-  border: 1px solid #e0e0e0;
-  padding: 8px;
-  border-radius: 12px;
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  backdrop-filter: none;
-  z-index: 999; /* make sure it's on top */
-}
-
-
-  /* BRAND ROW INSIDE MENU ---------------------------------------- */
+    background: #fefefe;
+    border: 1px solid #e0e0e0;
+    padding: 16px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 220px;
+  }
 
   .menu-brand {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 4px 6px;
-    margin-bottom: 4px;
     border-radius: 8px;
     background: #f5f5f5;
   }
@@ -317,23 +310,21 @@
 
   <!-- CONTROLS -->
   <div class="controls-row">
-    <!-- wrap 3-dots + menu so menu anchors to this button -->
-    <div class="more-wrapper">
-      <button class="icon-button" id="moreBtn" aria-label="More options">⋯</button>
-
-      <!-- 3 DOTS POPUP -->
-      <div class="more-menu" id="moreMenu">
-        <div class="menu-brand">
-          <img src="logo.PNG" alt="OrganizedQuinn logo">
-          <span>OrganizedQuinn</span>
-        </div>
-        <button id="menuResetBtn">Reset</button>
-        <button id="menuSettingsBtn">Settings</button>
-      </div>
-    </div>
-
+    <button class="icon-button" id="moreBtn" aria-label="More options">⋯</button>
     <button class="primary-button" id="playPauseBtn" aria-label="Start timer">▶</button>
     <button class="icon-button" id="nextBtn" aria-label="Next mode">⏭</button>
+  </div>
+</div>
+
+<!-- MORE MENU OVERLAY (CENTERED) -->
+<div class="more-overlay" id="moreOverlay">
+  <div class="more-menu" id="moreMenu">
+    <div class="menu-brand">
+      <img src="logo.png" alt="OrganizedQuinn logo">
+      <span>OrganizedQuinn</span>
+    </div>
+    <button id="menuResetBtn">Reset</button>
+    <button id="menuSettingsBtn">Settings</button>
   </div>
 </div>
 
@@ -404,6 +395,7 @@
   const secondsEl = document.getElementById("seconds");
   const playPauseBtn = document.getElementById("playPauseBtn");
   const moreBtn = document.getElementById("moreBtn");
+  const moreOverlay = document.getElementById("moreOverlay");
   const moreMenu = document.getElementById("moreMenu");
 
   const tabs = document.querySelectorAll(".tab");
@@ -740,19 +732,24 @@
     });
   });
 
+  // open More menu (centered)
   moreBtn.addEventListener("click", () => {
-    const isVisible = moreMenu.style.display === "flex";
-    moreMenu.style.display = isVisible ? "none" : "flex";
+    moreOverlay.style.display = "flex";
+  });
+
+  // close More when clicking outside
+  moreOverlay.addEventListener("click", (e) => {
+    if (e.target === moreOverlay) moreOverlay.style.display = "none";
   });
 
   // menu items
   menuResetBtn.addEventListener("click", () => {
     resetTimer();
-    moreMenu.style.display = "none";
+    moreOverlay.style.display = "none";
   });
 
   menuSettingsBtn.addEventListener("click", () => {
-    moreMenu.style.display = "none";
+    moreOverlay.style.display = "none";
     openSettings();
   });
 
@@ -772,5 +769,3 @@
 
 </body>
 </html>
-
-
