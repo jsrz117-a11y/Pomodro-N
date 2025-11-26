@@ -27,14 +27,14 @@
   }
 
   .widget {
-  text-align: center;
-  width: 320px;
+    text-align: center;
+    width: 320px;
 
-  /* NEW: rounded container */
-  background: #C14C8A;
-  padding: 24px;
-  border-radius: 12px;
-}
+    /* rounded container */
+    background: #C14C8A;
+    padding: 24px;
+    border-radius: 12px;
+  }
 
   /* TOP TABS ----------------------------------------------------- */
 
@@ -67,23 +67,23 @@
   /* TIMER -------------------------------------------------------- */
 
   .timer {
-  display: flex;
-  flex-direction: row;       /* horizontal layout */
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  line-height: 1;
-}
+    display: flex;
+    flex-direction: row;       /* horizontal layout */
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    line-height: 1;
+  }
 
-.time-part {
-  font-size: 80px;
-}
+  .time-part {
+    font-size: 80px;
+  }
 
-/* add colon between minutes and seconds */
-#minutes::after {
-  content: ":";
-  margin: 0 4px;            /* space between 25 and 00 */
-}
+  /* add colon between minutes and seconds */
+  #minutes::after {
+    content: ":";
+    margin: 0 4px;            /* space between 25 and 00 */
+  }
 
   /* CONTROLS ----------------------------------------------------- */
 
@@ -129,34 +129,34 @@
   /* MORE MENU ---------------------------------------------------- */
 
   .more-menu {
-  position: absolute;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-120px);
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-120px);
 
-  /* SOLID, NON-GLASS BACKGROUND */
-  background: #fefefe;          /* solid white */
-  border: 1px solid #e0e0e0;
-  padding: 8px;
-  border-radius: 12px;
-  display: none;
-  flex-direction: column;
-  gap: 4px;
+    /* SOLID, NON-GLASS BACKGROUND */
+    background: #fefefe;          /* solid white */
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+    border-radius: 12px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
 
-  /* make sure the blur is completely gone */
-  backdrop-filter: none;
-}
+    /* make sure the blur is completely gone */
+    backdrop-filter: none;
+  }
 
   .more-menu button {
-  border: none;
-  background: #f5f5f5;         /* solid grey button */
-  color: #7d2057;              /* matches your pink tone */
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 14px;
-  cursor: pointer;
-  text-align: left;
-}
+    border: none;
+    background: #f5f5f5;         /* solid grey button */
+    color: #7d2057;              /* matches your pink tone */
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+  }
 
   /* SETTINGS MODAL ---------------------------------------------- */
 
@@ -292,6 +292,11 @@
       <label for="longInput">Long break (min)</label>
       <input type="number" id="longInput" min="1" value="15">
     </div>
+    <!-- NEW: how many short breaks before long break -->
+    <div class="setting-row">
+      <label for="breakCountInput">Short breaks before long</label>
+      <input type="number" id="breakCountInput" min="1" value="3">
+    </div>
 
     <button class="save-btn" id="saveSettingsBtn">Save</button>
   </div>
@@ -310,7 +315,11 @@
   let timerId = null;
   let isRunning = false;
 
-  // NEW: real-time based end timestamp (ms) + storage key
+  // NEW: track short breaks → long break
+  let shortBreakCounter = 0;
+  let shortBreaksBeforeLong = 3;
+
+  // real-time based end timestamp (ms) + storage key
   let endTimestamp = null;
   const STORAGE_KEY = "pomodoro_state_v1";
 
@@ -331,6 +340,7 @@
   const focusInput = document.getElementById("focusInput");
   const shortInput = document.getElementById("shortInput");
   const longInput = document.getElementById("longInput");
+  const breakCountInput = document.getElementById("breakCountInput");
 
   const menuResetBtn = document.getElementById("menuResetBtn");
   const menuSettingsBtn = document.getElementById("menuSettingsBtn");
@@ -355,7 +365,9 @@
       currentMode,
       totalSeconds,
       isRunning,
-      endTimestamp
+      endTimestamp,
+      shortBreakCounter,
+      shortBreaksBeforeLong
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -381,6 +393,9 @@
       totalSeconds = state.totalSeconds ?? modes[currentMode] * 60;
       isRunning = !!state.isRunning;
       endTimestamp = state.endTimestamp ?? null;
+
+      shortBreakCounter = state.shortBreakCounter ?? 0;
+      shortBreaksBeforeLong = state.shortBreaksBeforeLong ?? 3;
 
       // update active tab
       tabs.forEach(tab => {
@@ -505,10 +520,21 @@
     saveState();
   }
 
+  // NEW: smarter next-mode logic using short break counter
   function goToNextMode() {
-    const currentIndex = modeOrder.indexOf(currentMode);
-    const nextIndex = (currentIndex + 1) % modeOrder.length;
-    setMode(modeOrder[nextIndex]);
+    if (currentMode === "focus") {
+      // after a focus session → short or long break
+      shortBreakCounter++;
+      if (shortBreakCounter >= shortBreaksBeforeLong) {
+        shortBreakCounter = 0;
+        setMode("long");
+      } else {
+        setMode("short");
+      }
+    } else {
+      // after any break → back to focus
+      setMode("focus");
+    }
   }
 
   // --- SETTINGS ----------------------------------------------------
@@ -517,6 +543,7 @@
     focusInput.value = modes.focus;
     shortInput.value = modes.short;
     longInput.value = modes.long;
+    breakCountInput.value = shortBreaksBeforeLong;
 
     settingsOverlay.style.display = "flex";
   }
@@ -529,10 +556,12 @@
     const f = parseInt(focusInput.value, 10);
     const s = parseInt(shortInput.value, 10);
     const l = parseInt(longInput.value, 10);
+    const bc = parseInt(breakCountInput.value, 10);
 
     if (f > 0) modes.focus = f;
     if (s > 0) modes.short = s;
     if (l > 0) modes.long = l;
+    if (bc > 0) shortBreaksBeforeLong = bc;
 
     if (!isRunning) {
       totalSeconds = modes[currentMode] * 60;
@@ -589,8 +618,3 @@
 
 </body>
 </html>
-
-
-
-
-
